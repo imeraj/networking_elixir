@@ -9,7 +9,7 @@ defmodule TCPEchoServer.Connection do
 
   @spec start_link(keyword()) :: GenServer.on_start()
   def start_link(socket) do
-    GenServer.start_link(__MODULE__, socket, name: __MODULE__)
+    GenServer.start_link(__MODULE__, socket)
   end
 
   # callbacks
@@ -36,6 +36,8 @@ defmodule TCPEchoServer.Connection do
     Logger.error("TCP connection error #{inspect(reason)}")
     {:stop, :normal, state}
   end
+
+  # Private functions
 
   defp handle_new_data(state) do
     case String.split(state.buffer, "\n", parts: 2) do
