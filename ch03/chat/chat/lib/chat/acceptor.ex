@@ -43,7 +43,6 @@ defmodule Chat.Acceptor do
 
     case :gen_tcp.accept(listen_socket, 2_000) do
       {:ok, socket} ->
-        Logger.info("Accepted connection on #{inspect(socket)}")
         {:ok, pid} = DynamicSupervisor.start_child(supervisor, {Chat.Connection, socket})
         :ok = :gen_tcp.controlling_process(socket, pid)
         send(self(), :accept)
