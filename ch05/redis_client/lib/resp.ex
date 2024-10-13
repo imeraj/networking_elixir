@@ -9,7 +9,7 @@ defmodule RedisClient.RESP do
     defexception [:message]
   end
 
-  @type(redis_value :: binary | integer | nil | %Error{}, [redis_Value])
+  @type redis_value :: binary | integer | nil | %Error{} | [redis_value]
   @type on_decode(value) :: {:ok, value, binary} | {:continuation, (binary -> on_decode(value))}
 
   @crlf "\r\n"
