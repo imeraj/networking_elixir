@@ -26,6 +26,10 @@ defmodule RedisClient.StateMachine do
 
   @impl :gen_statem
   def init(opts) do
+    if registry = opts[:registry_name] do
+      {:ok, _} = Registry.register(registry, :client, :no_value)
+    end
+
     data = %__MODULE__{
       host: Keyword.fetch!(opts, :host),
       port: Keyword.fetch!(opts, :port)
