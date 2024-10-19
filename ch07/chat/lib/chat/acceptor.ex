@@ -21,14 +21,17 @@ defmodule Chat.Acceptor do
       exit_on_close: false,
       reuseaddr: true,
       backlog: 25,
-      packet: :raw
+      packet: :raw,
+      cacertfile: Application.app_dir(:chat, "priv/ca.pem"),
+      certfile: Application.app_dir(:chat, "priv/server.crt"),
+      keyfile: Application.app_dir(:chat, "priv/server.key")
     ]
 
     {:ok, sup} = DynamicSupervisor.start_link(max_children: 20)
 
-    case :gen_tcp.listen(port, listen_options) do
+    case :ssl.listen(port, listen_options) do
       {:ok, listen_socket} ->
-        Logger.info("Started chat server on port #{port}")
+        Logger.info("Started TLS pooled chat server on port #{port}")
         send(self(), :accept)
         {:ok, %__MODULE__{listen_socket: listen_socket, supervisor: sup}}
 
@@ -41,10 +44,11 @@ defmodule Chat.Acceptor do
   def handle_info(:accept, %__MODULE__{} = state) do
     %{listen_socket: listen_socket, supervisor: supervisor} = state
 
-    case :gen_tcp.accept(listen_socket, 2_000) do
+    case :ssl.transport_accept(listen_socket, 2_000) do
       {:ok, socket} ->
+        Logger.debug("Accepted TLS connection")
         {:ok, pid} = DynamicSupervisor.start_child(supervisor, {Chat.Connection, socket})
-        :ok = :gen_tcp.controlling_process(socket, pid)
+        :ok = :ssl.controlling_process(socket, pid)
         send(self(), :accept)
         {:noreply, state}
 

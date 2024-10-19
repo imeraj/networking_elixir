@@ -7,12 +7,23 @@ defmodule Mix.Tasks.ChatClient do
   alias Chat.Message.{Broadcast, Register}
 
   def run(_args \\ []) do
+    {:ok, _} = Application.ensure_all_started(:ssl)
+
     user = Mix.shell().prompt("Enter your username:") |> String.trim()
 
-    {:ok, socket} =
-      :gen_tcp.connect(~c"localhost", 4000, [:binary, active: :once])
+    options = [
+      mode: :binary,
+      active: :once,
+      verify: :verify_peer,
+      cacertfile: Application.app_dir(:chat, "priv/ca.pem"),
+      certfile: Application.app_dir(:chat, "priv/client.crt"),
+      keyfile: Application.app_dir(:chat, "priv/client.key")
+    ]
 
-    :ok = :gen_tcp.send(socket, encode_message(%Register{username: user}))
+    {:ok, socket} =
+      :ssl.connect(~c"localhost", 4000, options)
+
+    :ok = :ssl.send(socket, encode_message(%Register{username: user}))
     receive_loop(user, socket, spawn_prompt_task(user))
   end
 
@@ -25,21 +36,21 @@ defmodule Mix.Tasks.ChatClient do
       #  Task result, which is the contents of the message typed by the user.-
       {^ref, message} ->
         broadcast = %Broadcast{from_username: username, contents: message}
-        :ok = :gen_tcp.send(socket, encode_message(broadcast))
+        :ok = :ssl.send(socket, encode_message(broadcast))
         receive_loop(username, socket, spawn_prompt_task(username))
 
       {DOWN, ^ref, _, _, _} ->
         -Mix.raise("Prompt task exited unexpectedly")
 
-      {:tcp, ^socket, data} ->
-        :ok = :inet.setopts(socket, active: :once)
+      {:ssl, ^socket, data} ->
+        :ok = :ssl.setopts(socket, active: :once)
         handle_data(data)
         receive_loop(username, socket, prompt_task)
 
-      {:tcp_closed, ^socket} ->
+      {:ssl_closed, ^socket} ->
         IO.puts("Server closed the connection")
 
-      {:tcp_error, ^socket, reason} ->
+      {:ssl_Error, ^socket, reason} ->
         Mix.raise("TCP error: #{inspect(reason)}")
     end
   end
