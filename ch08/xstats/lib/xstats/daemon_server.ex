@@ -11,6 +11,12 @@ defmodule XStats.DaemonServer do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
+  @spec fetch_value(GenServer.server(), String.t()) ::
+          {:ok, number()} | :error
+  def fetch_value(server, name) do
+    GenServer.call(server, {:fetch_value, name})
+  end
+
   defstruct socket: nil, metrics: %{}, flush_io_device: nil
 
   # callbacks
@@ -26,6 +32,14 @@ defmodule XStats.DaemonServer do
 
       {:error, reason} ->
         {:stop, reason}
+    end
+  end
+
+  @impl true
+  def handle_call({:fetch_value, name}, _from, state) do
+    case Map.fetch(state.metrics, name) do
+      {:ok, {_type, value}} -> {:reply, {:ok, value}, state}
+      :error -> {:reply, :error, state}
     end
   end
 

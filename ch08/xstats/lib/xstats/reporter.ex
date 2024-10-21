@@ -26,7 +26,7 @@ defmodule XStats.Reporter do
 
   @impl true
   def init(opts) do
-    dest_port = Keyword.fetch!(opts, :port)
+    dest_port = Keyword.fetch!(opts, :dest_port)
 
     case :gen_udp.open(0, [:binary]) do
       {:ok, socket} ->
