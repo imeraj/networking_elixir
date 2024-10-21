@@ -4,7 +4,7 @@ defmodule XStats.DaemonServer do
 
   require Logger
 
-  @flush_interval_millisec :timer.seconds(10)
+  @flush_interval_millisec :timer.seconds(20)
 
   @spec start_link(keyword()) :: GenServer.on_start()
   def start_link(opts) do
@@ -67,9 +67,9 @@ defmodule XStats.DaemonServer do
   end
 
   defp process_metric({:counter, name, value}, %__MODULE__{} = state) do
-    case state.metrics[:name] || {:counter, 0} do
-      {:counter, counter} ->
-        put_in(state.metrics[name], {:counter, counter + value})
+    case state.metrics[name] || {:counter, 0} do
+      {:counter, current} ->
+        put_in(state.metrics[name], {:counter, current + value})
 
       _other ->
         state
