@@ -72,4 +72,11 @@ defmodule XDig do
 
     answers
   end
+
+  require Record
+
+  for {record, fields} <-
+        Record.extract_all(from_lib: "kernel/src/inet_dns.hrl") do
+    Record.defrecord(record, fields)
+  end
 end
