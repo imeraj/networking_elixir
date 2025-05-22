@@ -8,7 +8,7 @@ defmodule TCPEchoServer.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      {TCPEchoServer.Acceptor, port: 4000}
+      {TCPEchoServer.Acceptor, port: 6000}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

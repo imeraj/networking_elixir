@@ -21,6 +21,7 @@ defmodule TCPEchoServer.Connection do
   def handle_info(message, state)
 
   def handle_info({:tcp, socket, data}, %__MODULE__{socket: socket} = state) do
+    :ok = :inet.setopts(socket, active: :once)
     state = update_in(state.buffer, &(&1 <> data))
     state = handle_new_data(state)
     {:noreply, state}

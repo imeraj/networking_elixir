@@ -15,7 +15,7 @@ defmodule TCPEchoServer.Acceptor do
 
     listen_options = [
       :binary,
-      active: true,
+      active: :once,
       exit_on_close: false,
       reuseaddr: true,
       backlog: 25
@@ -34,7 +34,7 @@ defmodule TCPEchoServer.Acceptor do
 
   @impl GenServer
   def handle_info(:accept, listen_socket) do
-    case :gen_tcp.accept(listen_socket, 2000) do
+    case :gen_tcp.accept(listen_socket, 2_000) do
       {:ok, socket} ->
         {:ok, pid} = TCPEchoServer.Connection.start_link(socket)
         :ok = :gen_tcp.controlling_process(socket, pid)
@@ -46,6 +46,7 @@ defmodule TCPEchoServer.Acceptor do
         {:noreply, listen_socket}
 
       {:error, reason} ->
+        Logger.error("TCP accept failed: #{inspect(reason)}")
         {:stop, reason, listen_socket}
     end
   end

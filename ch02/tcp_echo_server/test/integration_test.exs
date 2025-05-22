@@ -2,7 +2,7 @@ defmodule IntegrationTest do
   use ExUnit.Case
 
   test "sends back the received data" do
-    {:ok, socket} = :gen_tcp.connect(~c"localhost", 4000, [:binary, active: false])
+    {:ok, socket} = :gen_tcp.connect(~c"localhost", 6000, [:binary, active: false])
 
     assert :ok = :gen_tcp.send(socket, "Hello world\n")
 
@@ -11,7 +11,7 @@ defmodule IntegrationTest do
   end
 
   test "handles fragmented data" do
-    {:ok, socket} = :gen_tcp.connect(~c"localhost", 4000, [:binary, active: false])
+    {:ok, socket} = :gen_tcp.connect(~c"localhost", 6000, [:binary, active: false])
 
     assert :ok = :gen_tcp.send(socket, "Hello")
     assert :ok = :gen_tcp.send(socket, " world\nand one more\n")
@@ -24,7 +24,7 @@ defmodule IntegrationTest do
     tasks =
       for _ <- 1..5 do
         Task.async(fn ->
-          {:ok, socket} = :gen_tcp.connect(~c"localhost", 4000, [:binary, active: false])
+          {:ok, socket} = :gen_tcp.connect(~c"localhost", 6000, [:binary, active: false])
 
           assert :ok = :gen_tcp.send(socket, "Hello world\n")
 
