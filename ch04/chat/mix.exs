@@ -7,15 +7,29 @@ defmodule Chat.MixProject do
       version: "0.1.0",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      mod: application_mod()
     ]
+  end
+
+  defp application_mod do
+    cond do
+      System.get_env("POOL") ->
+        {Chat.AcceptorPool.Application, []}
+
+      System.get_env("THOUSAND_ISLAND") ->
+        {Chat.ThousandIsland.Application, []}
+
+      true ->
+        {Chat.Application, []}
+    end
   end
 
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
-      mod: {Chat.Application, []}
+      extra_applications: [:logger, :wx, :observer],
+      mod: application_mod()
     ]
   end
 
