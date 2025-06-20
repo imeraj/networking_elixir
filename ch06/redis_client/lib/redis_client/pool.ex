@@ -1,5 +1,7 @@
 defmodule RedisClient.Pool do
-  @moduledoc false
+  @moduledoc """
+  Pooling of processes
+  """
 
   def start_link(worker_args) do
     pool_args = [worker_module: RedisClientQueue, size: 5]
