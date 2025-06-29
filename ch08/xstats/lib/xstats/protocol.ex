@@ -37,7 +37,7 @@ defmodule Xstats.Protocol do
         end
 
       _ ->
-        {:error, "invalid line format: #{inspect({line})}"}
+        {:error, "invalid line format: #{inspect(line)}"}
     end
   end
 
