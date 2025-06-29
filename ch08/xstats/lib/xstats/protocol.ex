@@ -25,7 +25,7 @@ defmodule Xstats.Protocol do
         end
       end)
 
-    [Enum.reverse(metrics), Enum.reverse(errors)]
+    {Enum.reverse(metrics), Enum.reverse(errors)}
   end
 
   defp parse_line(line) do
