@@ -136,18 +136,29 @@ defmodule XDig.Protocol do
           decode_strings(other)
       end
 
-    <<
-      type::16,
-      class::16,
-      ttl::32,
-      rdlength::16,
-      rdata::size(rdlength)-binary,
-      rest::binary
-    >> = rest
+    {type, class, ttl, rdata, rest} =
+      case rest do
+        <<
+          type::16,
+          class::16,
+          ttl::32,
+          rdlength::16,
+          rdata::size(rdlength)-binary,
+          rest::binary
+        >> ->
+          decoded_rdata =
+            case {type, rdata} do
+              {unquote(@types[:a]), <<a, b, c, d>>} ->
+                {a, b, c, d}
 
-    rdata =
-      case {type, rdata} do
-        {unquote(@types[:a]), <<a, b, c, d>>} -> {a, b, c, d}
+              {type, rdata} ->
+                raise "Unsupported DNS record type #{type} with rdata: #{inspect(rdata, limit: :infinity)}"
+            end
+
+          {type, class, ttl, decoded_rdata, rest}
+
+        _ ->
+          raise "Failed to decode DNS answer: invalid binary format. Binary size: #{byte_size(rest)}, Data: #{inspect(rest, limit: :infinity)}"
       end
 
     answer = %Answer{
@@ -166,14 +177,25 @@ defmodule XDig.Protocol do
   """
   @spec encode_answer(Answer.t()) :: iodata()
   def encode_answer(%Answer{} = answer) do
+    encoded_rdata = encode_rdata(answer.type, answer.rdata)
+
     [
       encode_strings(answer.name),
       <<encode_type(answer.type)::16>>,
       <<answer.class::16>>,
       <<answer.ttl::32>>,
-      <<byte_size(answer.rdata)::16>>,
-      answer.rdata
+      <<byte_size(encoded_rdata)::16>>,
+      encoded_rdata
     ]
+  end
+
+  defp encode_rdata(:a, {a, b, c, d})
+       when is_integer(a) and is_integer(b) and is_integer(c) and is_integer(d) do
+    <<a, b, c, d>>
+  end
+
+  defp encode_rdata(_type, rdata) when is_binary(rdata) do
+    rdata
   end
 
   @doc """
@@ -195,6 +217,10 @@ defmodule XDig.Protocol do
   """
   @spec decode_strings(binary()) :: {[String.t()], rest :: binary()}
   def decode_strings(binary)
+
+  def decode_strings(<<>>) do
+    {[], <<>>}
+  end
 
   def decode_strings(<<0x00, rest::binary>>) do
     {[], rest}

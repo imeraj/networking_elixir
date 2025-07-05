@@ -1,4 +1,4 @@
-defmodule Xdig do
+defmodule XDig do
   @moduledoc """
   xdig DNS client
   """
@@ -60,9 +60,13 @@ defmodule Xdig do
     {_question, rest} = XDig.Protocol.decode_question(rest)
 
     {answers, rest} =
-      Enum.map_reduce(1..answer_count, rest, fn _index, rest ->
-        XDig.Protocol.decode_answer(packet, rest)
-      end)
+      if answer_count > 0 do
+        Enum.map_reduce(1..answer_count, rest, fn _index, rest ->
+          XDig.Protocol.decode_answer(packet, rest)
+        end)
+      else
+        {[], rest}
+      end
 
     if rest != "", do: raise("unexpected trailing data in DNS message")
 
