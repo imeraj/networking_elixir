@@ -8,8 +8,10 @@ defmodule SillyGame.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: SillyGame.Worker.start_link(arg)
-      # {SillyGame.Worker, arg}
+      {Bandit,
+       plug: SillyGame.Router,
+       scheme: :http,
+       port: String.to_integer(System.get_env("SILLY_GAME_PORT", "9393"))}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
